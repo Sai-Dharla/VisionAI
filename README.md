@@ -14,7 +14,7 @@ VisionAI is a Django image-recognition application powered by MobileNetV2. Uploa
 
 ## Requirements
 
-- Python 3.12.8 (the Render deployment version)
+- Python 3.11.11 (the Render deployment version)
 - Django 6.1+
 - Pillow
 - NumPy
@@ -23,7 +23,7 @@ VisionAI is a Django image-recognition application powered by MobileNetV2. Uploa
 
 TensorFlow downloads the MobileNetV2 ImageNet weights the first time an image is analyzed. The initial prediction can therefore take longer than subsequent predictions.
 
-The deployment uses Python 3.12.8 with `tensorflow-cpu==2.20.0`. Keep this pairing together: Render's Python 3.14 default is not supported by the pinned TensorFlow build.
+The deployment uses Python 3.11.11 with `tensorflow-cpu==2.20.0`. Keep this pairing together: Render's Python 3.14 default is not supported by the pinned TensorFlow build. Render expects the bare version in `runtime.txt` (for example, `3.11.11`), not the `python-3.11.11` format used by some other hosting platforms.
 
 ## Setup
 
