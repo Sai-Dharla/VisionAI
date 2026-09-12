@@ -1,0 +1,41 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Django local files
+*.sqlite3
+staticfiles/
+media/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Test and local run artifacts
+e2e_output.txt
+test_output.txt
+servercheck.txt
+port8000.txt
+tmpl.txt
+pw_*.txt
+
+# Model and ML caches
+.keras/
+.cache/
+*.h5
+*.keras
+
+# Editors and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

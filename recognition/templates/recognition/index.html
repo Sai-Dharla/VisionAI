@@ -1,0 +1,914 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionAi - Image Recognition Dashboard</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #F4F6FB;
+  }
+  .font-handwriting {
+    font-family: 'Caveat', cursive;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes spinSlow {
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spinSlow 1s linear infinite;
+  }
+</style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-indigo-500 selection:text-white min-h-screen">
+
+<div class="flex min-h-screen bg-[#F4F6FB]">
+
+  <!-- ==================== 1. COLLAPSIBLE SIDEBAR ==================== -->
+  <aside id="sidebar" class="bg-[#0B1120] text-slate-300 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 sticky top-0 h-screen z-30 w-64 p-5">
+    
+    <div>
+      <!-- Top Brand & Collapse Toggle -->
+      <div class="flex items-center justify-between mb-8 pt-2">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 shrink-0">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M3 9a2 2 0 0 1 2-2h3l2-3h4l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"/></svg>
+          </div>
+          <div id="brand-text" class="transition-opacity duration-200">
+            <h1 class="text-xl font-bold tracking-tight leading-none text-white">
+              Vision<span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Ai</span>
+            </h1>
+            <p class="text-[11px] text-slate-400 font-medium tracking-wide mt-1">Image Recognition</p>
+          </div>
+        </div>
+
+        <!-- Collapse Toggle Button -->
+        <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="Toggle sidebar" class="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors shrink-0">
+          <svg id="chevron-left" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg id="chevron-right" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Navigation Items -->
+      <nav class="space-y-1.5">
+        <a href="{% url 'recognition:recognize' %}" id="nav-Recognize" class="nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-semibold text-sm transition-all {% if active_tab == 'Recognize' %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span class="nav-label">Recognize</span>
+        </a>
+        <a href="{% url 'recognition:history' %}" id="nav-History" class="nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-semibold text-sm transition-all {% if active_tab == 'History' %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+          <span class="nav-label">History</span>
+        </a>
+        <a href="{% url 'recognition:explore' %}" id="nav-Explore" class="nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-semibold text-sm transition-all {% if active_tab == 'Explore' %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span class="nav-label">Explore</span>
+        </a>
+        <a href="{% url 'recognition:modelinfo' %}" id="nav-ModelInfo" class="nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-semibold text-sm transition-all {% if active_tab == 'ModelInfo' %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg>
+          <span class="nav-label">Model Info</span>
+        </a>
+        <a href="{% url 'recognition:settings' %}" id="nav-Settings" class="nav-item w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl font-semibold text-sm transition-all {% if active_tab == 'Settings' %}bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20{% else %}text-slate-400 hover:text-slate-200 hover:bg-slate-800/60{% endif %}">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Authentication controls -->
+    <div id="sidebar-auth" class="mt-auto pt-4 border-t border-slate-800">
+      {% if user.is_authenticated %}
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+            {{ user.first_name|first|default:user.username|first|upper }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-white truncate">{{ user.get_full_name|default:user.username }}</p>
+            <p class="text-[10px] text-slate-400 truncate">{{ user.email }}</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <a href="{% url 'recognition:account' %}" class="flex-1 py-2 text-center text-[11px] font-bold text-slate-300 bg-slate-800/80 hover:bg-slate-700 rounded-xl transition-colors">Account</a>
+          <a href="{% url 'recognition:logout' %}" class="flex-1 py-2 text-center text-[11px] font-bold text-rose-400 bg-slate-800/80 hover:bg-slate-700 rounded-xl transition-colors">Logout</a>
+        </div>
+      {% else %}
+        <div class="flex gap-2">
+          <a href="{% url 'recognition:login' %}" class="flex-1 py-2 text-center text-[11px] font-bold text-slate-300 bg-slate-800/80 hover:bg-slate-700 rounded-xl transition-colors">Sign In</a>
+          <a href="{% url 'recognition:register' %}" class="flex-1 py-2 text-center text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">Sign Up</a>
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <div class="flex-1 flex flex-col min-w-0">
+    
+    <!-- ==================== 2. TOP HEADER ==================== -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-8 py-4 sticky top-0 z-20 flex items-center justify-between gap-4">
+      
+      <!-- Left/Center: Search Bar -->
+      <div class="relative w-96 max-w-full">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="text" placeholder='Search or try "dog", "car", "flower" ...' class="w-full bg-[#F4F6FB] border border-slate-200/80 pl-11 pr-4 py-2.5 rounded-full text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all" readonly />
+      </div>
+
+      <!-- Right: Controls & Profile -->
+      <div class="flex items-center gap-4">
+        
+
+        <!-- Profile / Auth Controls -->
+        <div id="auth-header-widget" class="flex items-center gap-3 pl-2">
+          {% if user.is_authenticated %}
+            <span class="text-sm font-semibold text-slate-800">{{ user.get_full_name|default:user.username }}</span>
+            <a href="{% url 'recognition:account' %}" class="text-xs font-bold text-blue-600 hover:underline">Account</a>
+            <a href="{% url 'recognition:logout' %}" class="text-xs font-bold text-rose-600 hover:underline">Logout</a>
+          {% else %}
+            <a href="{% url 'recognition:login' %}" class="text-xs font-bold text-blue-600 hover:underline">Sign In</a>
+            <a href="{% url 'recognition:register' %}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full transition-colors">Sign Up</a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <!-- Workspace Content Pages -->
+    <main class="p-8 space-y-8 max-w-7xl mx-auto w-full">
+      
+      <!-- ==================== TAB 1: RECOGNIZE PAGE ==================== -->
+      <div id="tab-page-Recognize" class="tab-page space-y-8 {% if active_tab != 'Recognize' %}hidden{% endif %}">
+        
+        <!-- HERO SECTION -->
+        <section class="bg-gradient-to-r from-[#EFF3FF] via-[#E8EDFF] to-[#F3F0FF] rounded-3xl p-8 border border-indigo-100/70 shadow-sm relative overflow-hidden flex flex-col lg:flex-row justify-between items-start gap-8">
+          <div class="space-y-4 max-w-xl z-10">
+            <span class="text-xs font-bold text-indigo-900 tracking-widest uppercase bg-indigo-100/80 px-3 py-1 rounded-full">
+              WELCOME TO VISIONAI
+            </span>
+            <h2 class="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Identify Anything <br />
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">with AI</span>
+            </h2>
+            <p class="text-slate-600 text-base leading-relaxed">
+              Upload an image and let our AI model recognize objects, animals, places and more — instantly and accurately.
+            </p>
+            <div class="pt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
+              <div class="flex items-center gap-1.5 bg-white/70 backdrop-blur px-3 py-2 rounded-xl border border-white/80"><span class="text-amber-500">⚡</span> Fast Results</div>
+              <div class="flex items-center gap-1.5 bg-white/70 backdrop-blur px-3 py-2 rounded-xl border border-white/80"><span class="text-blue-500">🎯</span> High Accuracy</div>
+              <div class="flex items-center gap-1.5 bg-white/70 backdrop-blur px-3 py-2 rounded-xl border border-white/80"><span class="text-emerald-500">🛡️</span> Privacy Focused</div>
+              <div class="flex items-center gap-1.5 bg-white/70 backdrop-blur px-3 py-2 rounded-xl border border-white/80"><span class="text-purple-500">💻</span> Works on Any Device</div>
+            </div>
+          </div>
+
+          <div class="relative w-full lg:w-auto flex justify-center lg:justify-end items-center pt-4 lg:pt-0 shrink-0">
+            <div class="absolute -top-3 left-4 lg:-left-20 text-indigo-700 font-handwriting text-2xl font-bold flex items-center gap-1 rotate-[-6deg] z-20 pointer-events-none">
+              <span>Discover<br/>what's in your image!</span>
+              <span class="text-3xl">⤵</span>
+            </div>
+            <div class="absolute -bottom-2 right-4 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-indigo-100 flex items-center gap-2 text-xs font-bold text-indigo-900 z-20">
+              <span class="text-indigo-600">✨</span> From everyday objects to extraordinary insights
+            </div>
+            <div class="flex items-center gap-3 relative py-4">
+              <div class="w-28 h-36 bg-white p-2 rounded-2xl shadow-md border border-slate-100 transform -rotate-6 hover:rotate-0 transition-transform">
+                <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=300&q=80" alt="Car" class="w-full h-24 object-cover rounded-xl" />
+                <p class="text-[10px] font-bold text-slate-600 text-center mt-2">Car</p>
+              </div>
+              <div class="w-32 h-40 bg-white p-2 rounded-2xl shadow-xl border border-slate-100 transform rotate-2 hover:rotate-0 transition-transform z-10">
+                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=300&q=80" alt="Dog" class="w-full h-28 object-cover rounded-xl" />
+                <p class="text-xs font-bold text-slate-800 text-center mt-2">Golden Retriever</p>
+              </div>
+              <div class="w-28 h-36 bg-white p-2 rounded-2xl shadow-md border border-slate-100 transform rotate-6 hover:rotate-0 transition-transform">
+                <img src="https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=300&q=80" alt="Sunflower" class="w-full h-24 object-cover rounded-xl" />
+                <p class="text-[10px] font-bold text-slate-600 text-center mt-2">Sunflower</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- UPLOAD + RESULTS 2-COLUMN -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          
+          <!-- UPLOAD CARD -->
+          <div class="bg-white rounded-3xl p-7 shadow-sm border border-slate-200/80 space-y-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Upload an Image</h3>
+                <p class="text-xs text-slate-500">Drag & drop an image or click to browse</p>
+              </div>
+            </div>
+
+            <!-- Dropzone -->
+            <div id="dropzone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-blue-200 bg-[#F8FAFF] hover:border-blue-400 hover:bg-blue-50/30 rounded-2xl p-8 text-center cursor-pointer transition-all">
+              <div class="w-16 h-16 rounded-full bg-blue-100/70 text-blue-600 mx-auto flex items-center justify-center mb-4">
+                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>
+              </div>
+              <p class="font-bold text-slate-800 text-base">Drag & drop your image here</p>
+              <p class="text-xs text-slate-400 mt-1">or click to browse</p>
+              
+              <button type="button" class="mt-5 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm">
+                Choose Image
+              </button>
+              
+              <p class="text-[11px] text-slate-400 mt-4 font-medium">Supports: JPG, PNG, WEBP (Max 5MB)</p>
+              <input id="file-input" type="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="handleFileSelected(this.files[0])" />
+            </div>
+
+            <!-- Preview Container -->
+            <div id="preview-container" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+              <img id="preview-img" src="" alt="Selected preview" class="w-full h-72 object-cover" />
+              <button type="button" onclick="clearSelection()" title="Remove image" class="absolute top-3 right-3 bg-white/90 hover:bg-white text-slate-700 hover:text-rose-600 p-2 rounded-full shadow-md transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+              <div class="p-4 bg-white border-t border-slate-200 flex justify-between items-center">
+                <div class="overflow-hidden">
+                  <p id="file-name" class="text-sm font-bold text-slate-800 truncate">image.jpg</p>
+                  <p id="file-size" class="text-xs text-slate-400">482 KB</p>
+                </div>
+                <button type="button" onclick="clearSelection()" class="text-xs font-semibold text-blue-600 hover:underline">
+                  Change Image
+                </button>
+              </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div id="error-alert" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2">
+              <span>⚠️</span> <span id="error-text">Please select an image.</span>
+            </div>
+
+            <!-- Identify Button -->
+            <button id="identify-btn" type="button" onclick="triggerIdentification()" disabled class="w-full py-4 rounded-2xl text-white font-bold text-base shadow-lg transition-all flex items-center justify-center gap-3 bg-slate-300 cursor-not-allowed shadow-none">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 5.6L20 10l-5.6 2.4L12 18l-2.4-5.6L4 10l5.6-2.4z"/></svg>
+              <span id="btn-label">Identify Image</span>
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+
+          <!-- RESULTS PANEL (HIDDEN INITIALLY - REQUIREMENT #9) -->
+          <div id="results-wrapper" class="space-y-6">
+            <div id="results-placeholder" class="bg-white/60 border border-dashed border-slate-200 rounded-3xl p-12 text-center text-slate-400 flex flex-col items-center justify-center min-h-[480px]">
+              <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-2xl mb-3 text-slate-400">
+                🔍
+              </div>
+              <h4 class="font-bold text-slate-600 text-base">No Analysis Results Yet</h4>
+              <p class="text-xs text-slate-400 max-w-xs mt-1">
+                Upload an image on the left and click <strong>Identify Image</strong> to see AI-powered details here.
+              </p>
+            </div>
+
+            <div id="results-card" class="hidden bg-white rounded-3xl p-7 shadow-sm border border-slate-200/80 space-y-6 animate-fade-in-up">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-bold text-slate-900">Recognition Results</h3>
+                    <p class="text-xs text-slate-500">Here's what we found in your image</p>
+                  </div>
+                </div>
+                <span class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Object Identified
+                </span>
+              </div>
+
+              <div class="flex items-start gap-4 bg-[#F8FAFF] p-4 rounded-2xl border border-indigo-100/60">
+                <img id="result-thumb" src="" alt="Thumbnail" class="w-20 h-20 rounded-xl object-cover shadow-sm border border-white shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <h4 id="result-title" class="text-2xl font-extrabold text-slate-900">Golden Retriever</h4>
+                    <span id="result-tag" class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">Animal</span>
+                  </div>
+                  <p id="result-subtitle" class="text-xs font-bold text-indigo-600 mt-1">Breed: Golden Retriever</p>
+                </div>
+              </div>
+
+              <div class="bg-slate-50 p-4 rounded-2xl text-xs text-slate-700 leading-relaxed border border-slate-100">
+                <p id="result-description">Description loading...</p>
+              </div>
+
+              <div>
+                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Structured Details</h5>
+                <div id="attributes-grid" class="grid grid-cols-2 gap-3"></div>
+              </div>
+
+              <div id="similar-section" class="pt-2">
+                <div class="flex items-center justify-between mb-3">
+                  <h5 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Similar Images</h5>
+                  <span class="text-xs font-bold text-blue-600 cursor-pointer hover:underline">View More →</span>
+                </div>
+                <div id="similar-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-2.5"></div>
+              </div>
+
+              <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3">
+                <button type="button" class="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-2 transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Result
+                </button>
+                <button type="button" class="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-2 transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download
+                </button>
+                <button type="button" onclick="clearSelection()" class="flex-1 py-2.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Try Another
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: HISTORY PAGE ==================== -->
+      <div id="tab-page-History" class="tab-page space-y-6 {% if active_tab != 'History' %}hidden{% endif %}">
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-slate-200/80 space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
+            <div>
+              <h2 class="text-2xl font-extrabold text-slate-900">Recognition History</h2>
+              <p class="text-xs text-slate-500 mt-1">View and manage all image scans performed on your account.</p>
+            </div>
+            <button onclick="clearAllHistory()" class="px-4 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Clear History
+            </button>
+          </div>
+
+          <div id="history-container" class="space-y-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 3: EXPLORE PAGE ==================== -->
+      <div id="tab-page-Explore" class="tab-page space-y-6 {% if active_tab != 'Explore' %}hidden{% endif %}">
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900">Explore AI Categories</h2>
+            <p class="text-xs text-slate-500 mt-1">Discover what our pre-trained MobileNetV2 AI model can identify across 1,000+ classes.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Category 1: Vehicles -->
+            <div class="bg-[#F8FAFF] border border-slate-200/80 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+              <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=500&q=80" alt="Vehicles" class="w-full h-40 object-cover" />
+              <div class="p-5 space-y-2">
+                <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold">Vehicles</span>
+                <h4 class="font-bold text-slate-900 text-lg">Motorcycles & Automobiles</h4>
+                <p class="text-xs text-slate-600 leading-relaxed">Recognizes sports bikes, cruisers, scooters, sports cars, sedans, trucks, and convertibles.</p>
+              </div>
+            </div>
+
+            <!-- Category 2: Animals -->
+            <div class="bg-[#F8FAFF] border border-slate-200/80 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+              <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=500&q=80" alt="Animals" class="w-full h-40 object-cover" />
+              <div class="p-5 space-y-2">
+                <span class="bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold">Animals</span>
+                <h4 class="font-bold text-slate-900 text-lg">Dog Breeds & Wildlife</h4>
+                <p class="text-xs text-slate-600 leading-relaxed">Identifies Golden Retrievers, Labradors, German Shepherds, Poodles, wild mammals, and birds.</p>
+              </div>
+            </div>
+
+            <!-- Category 3: Flowers -->
+            <div class="bg-[#F8FAFF] border border-slate-200/80 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+              <img src="https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=500&q=80" alt="Flowers" class="w-full h-40 object-cover" />
+              <div class="p-5 space-y-2">
+                <span class="bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold">Plants</span>
+                <h4 class="font-bold text-slate-900 text-lg">Flora & Vegetation</h4>
+                <p class="text-xs text-slate-600 leading-relaxed">Classifies sunflowers, roses, tulips, orchids, daisies, and various botanical species.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 4: MODEL INFO PAGE ==================== -->
+      <div id="tab-page-ModelInfo" class="tab-page space-y-6 {% if active_tab != 'ModelInfo' %}hidden{% endif %}">
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-slate-200/80 space-y-6">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900">MobileNetV2 Technical Specs</h2>
+            <p class="text-xs text-slate-500 mt-1">Deep Learning architecture details and inference benchmarks.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-[#F8FAFF] border border-indigo-100 rounded-2xl p-6 space-y-3">
+              <h4 class="font-bold text-indigo-900 text-base flex items-center gap-2">
+                <span>🤖</span> Model Architecture
+              </h4>
+              <ul class="text-xs text-slate-600 space-y-2">
+                <li>• <strong>Framework:</strong> TensorFlow 2.x / Keras</li>
+                <li>• <strong>Model:</strong> MobileNetV2 (Pre-trained on ImageNet)</li>
+                <li>• <strong>Parameters:</strong> ~3.4 Million weights</li>
+                <li>• <strong>Input Dimensions:</strong> 224 × 224 × 3 (RGB)</li>
+                <li>• <strong>Output:</strong> 1,000 Class probabilities + Softmax</li>
+              </ul>
+            </div>
+
+            <div class="bg-[#F8FAFF] border border-indigo-100 rounded-2xl p-6 space-y-3">
+              <h4 class="font-bold text-indigo-900 text-base flex items-center gap-2">
+                <span>⚡</span> Backend & Performance
+              </h4>
+              <ul class="text-xs text-slate-600 space-y-2">
+                <li>• <strong>Server:</strong> Django Web Framework (Python 3.12)</li>
+                <li>• <strong>Image Processing:</strong> Pillow (PIL) preprocessing</li>
+                <li>• <strong>Inference Latency:</strong> ~15ms - 40ms CPU per image</li>
+                <li>• <strong>Metadata Enrichment:</strong> Wikipedia API integration</li>
+                <li>• <strong>Storage:</strong> SQLite database for account scan records</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 5: SETTINGS PAGE ==================== -->
+      <div id="tab-page-Settings" class="tab-page space-y-6 {% if active_tab != 'Settings' %}hidden{% endif %}">
+        <div class="bg-white rounded-3xl p-7 shadow-sm border border-slate-200/80 space-y-6 max-w-2xl">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900">Account & Preference Settings</h2>
+            <p class="text-xs text-slate-500 mt-1">Manage your account profile and application preferences.</p>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-700">Account Username</label>
+              <input id="setting-username" type="text" class="w-full bg-[#F4F6FB] border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800" readonly />
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-700">Email Address</label>
+              <input id="setting-email" type="email" placeholder="user@example.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800" />
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-[#F8FAFF] rounded-2xl border border-slate-200/80">
+              <div>
+                <p class="text-xs font-bold text-slate-800">Auto-Save Scan History</p>
+                <p class="text-[11px] text-slate-500">Automatically record prediction scans into your history database.</p>
+              </div>
+              <input id="setting-autosave" type="checkbox" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" />
+            </div>
+
+            <button onclick="saveUserSettings()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
+              Save Preferences
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="pt-8 pb-4 border-t border-slate-200/60 text-center text-xs text-slate-400 space-y-1">
+        <p><strong>VisionAi</strong> v1.0 &nbsp;|&nbsp; Powered by MobileNetV2 &nbsp;|&nbsp; TensorFlow &nbsp;|&nbsp; Built with Django</p>
+        <p class="text-[11px] text-slate-400 font-medium">⚡ See the world smarter</p>
+      </footer>
+
+    </main>
+  </div>
+
+</div>
+
+<!-- ==================== AUTH MODAL ==================== -->
+<div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-fade-in-up">
+    <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+
+    <div class="text-center space-y-2 mb-6">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xl mx-auto flex items-center justify-center shadow-lg shadow-blue-500/25">
+        V
+      </div>
+      <h3 id="auth-title" class="text-2xl font-extrabold text-slate-900">Sign In to VisionAi</h3>
+      <p id="auth-subtitle" class="text-xs text-slate-500">Access your saved image scan history and account preferences.</p>
+    </div>
+
+    <!-- Auth Alert -->
+    <div id="auth-error" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs font-semibold mb-4"></div>
+
+    <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+      <div class="space-y-1">
+        <label class="text-xs font-bold text-slate-700">Username</label>
+        <input id="auth-username" type="text" required placeholder="Enter username" class="w-full bg-[#F4F6FB] border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <div id="auth-email-field" class="hidden space-y-1">
+        <label class="text-xs font-bold text-slate-700">Email Address</label>
+        <input id="auth-email" type="email" placeholder="user@example.com" class="w-full bg-[#F4F6FB] border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs font-bold text-slate-700">Password</label>
+        <input id="auth-password" type="password" required placeholder="Enter password" class="w-full bg-[#F4F6FB] border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <div id="auth-confirm-field" class="hidden space-y-1">
+        <label class="text-xs font-bold text-slate-700">Confirm Password</label>
+        <input id="auth-confirm-password" type="password" placeholder="Re-enter password" class="w-full bg-[#F4F6FB] border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl shadow-md hover:opacity-95 transition-opacity">
+        Sign In
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-xs text-slate-500">
+      <span id="auth-toggle-text">Don't have an account?</span>
+      <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="font-bold text-blue-600 hover:underline ml-1">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== JAVASCRIPT CONTROLLER ==================== -->
+<script>
+let currentFile = null;
+let isCollapsed = false;
+let currentUser = null;
+let isSignUpMode = false;
+
+/* Initial Load */
+document.addEventListener('DOMContentLoaded', () => {
+  checkUserStatus();
+
+  /* Activate the server-requested page (Recognize / History / Explore / ModelInfo / Settings) */
+  const ACTIVE_TAB = "{{ active_tab|default:'Recognize' }}";
+  if (ACTIVE_TAB === 'History') loadUserHistory();
+  if (ACTIVE_TAB === 'Settings') loadUserSettings();
+});
+
+/* User Authentication Check */
+async function checkUserStatus() {
+  try {
+    const resp = await fetch('/api/me/');
+    const data = await resp.json();
+
+    if (data.authenticated) {
+      currentUser = data.user;
+      document.getElementById('setting-username').value = currentUser.username;
+      document.getElementById('setting-email').value = currentUser.email || '';
+    } else {
+      currentUser = null;
+    }
+  } catch (err) {
+    console.error("Auth check failed:", err);
+  }
+}
+
+/* Auth Modal Handlers */
+function openAuthModal(signUp = false) {
+  isSignUpMode = signUp;
+  updateAuthModalUI();
+  document.getElementById('auth-modal').classList.remove('hidden');
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').classList.add('hidden');
+  document.getElementById('auth-error').classList.add('hidden');
+}
+
+function toggleAuthMode() {
+  isSignUpMode = !isSignUpMode;
+  updateAuthModalUI();
+}
+
+function updateAuthModalUI() {
+  const title = document.getElementById('auth-title');
+  const subtitle = document.getElementById('auth-subtitle');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const emailField = document.getElementById('auth-email-field');
+  const toggleText = document.getElementById('auth-toggle-text');
+  const toggleBtn = document.getElementById('auth-toggle-btn');
+
+  if (isSignUpMode) {
+    title.innerText = "Create Your Account";
+    subtitle.innerText = "Join VisionAi to save your search history and manage settings.";
+    submitBtn.innerText = "Create Account";
+    emailField.classList.remove('hidden');
+    document.getElementById('auth-confirm-field').classList.remove('hidden');
+    toggleText.innerText = "Already have an account?";
+    toggleBtn.innerText = "Sign In";
+  } else {
+    title.innerText = "Sign In to VisionAi";
+    subtitle.innerText = "Access your saved image scan history and account preferences.";
+    submitBtn.innerText = "Sign In";
+    emailField.classList.add('hidden');
+    document.getElementById('auth-confirm-field').classList.add('hidden');
+    toggleText.innerText = "Don't have an account?";
+    toggleBtn.innerText = "Create Account";
+  }
+}
+
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  const username = document.getElementById('auth-username').value;
+  const password = document.getElementById('auth-password').value;
+  const email = document.getElementById('auth-email').value;
+  const errorAlert = document.getElementById('auth-error');
+
+  errorAlert.classList.add('hidden');
+
+  if (isSignUpMode) {
+    const confirmPassword = document.getElementById('auth-confirm-password').value;
+    if (password !== confirmPassword) {
+      errorAlert.innerText = "Passwords do not match.";
+      errorAlert.classList.remove('hidden');
+      return;
+    }
+    if (password.length < 8) {
+      errorAlert.innerText = "Password must be at least 8 characters long.";
+      errorAlert.classList.remove('hidden');
+      return;
+    }
+  }
+
+  const endpoint = isSignUpMode ? '/api/signup/' : '/api/login/';
+  const payload = isSignUpMode
+    ? { username, password, email, confirm_password: document.getElementById('auth-confirm-password').value }
+    : { username, password };
+
+  try {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      errorAlert.innerText = data.error || "Authentication failed.";
+      errorAlert.classList.remove('hidden');
+    } else {
+      closeAuthModal();
+      checkUserStatus();
+    }
+  } catch (err) {
+    errorAlert.innerText = "Network error connecting to server.";
+    errorAlert.classList.remove('hidden');
+  }
+}
+
+async function handleLogout() {
+  await fetch('/api/logout/', { method: 'POST' });
+  checkUserStatus();
+}
+
+/* Load History Records */
+async function loadUserHistory() {
+  const container = document.getElementById('history-container');
+  container.innerHTML = `<p class="text-xs text-slate-400">Loading history records...</p>`;
+
+  try {
+    const resp = await fetch('/api/history/');
+    const data = await resp.json();
+
+    if (!data.history || data.history.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-12 text-slate-400 space-y-2">
+          <span class="text-4xl">📜</span>
+          <p class="font-bold text-slate-600">No History Recorded Yet</p>
+          <p class="text-xs">Uploaded images will automatically be saved here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = "";
+    data.history.forEach(item => {
+      const card = document.createElement('div');
+      card.className = "bg-[#F8FAFF] border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between gap-4";
+      card.innerHTML = `
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg">
+            🔍
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h4 class="font-extrabold text-slate-900 text-base">${item.class_name}</h4>
+              <span class="bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold">${item.tag}</span>
+            </div>
+            <p class="text-xs text-slate-500">${item.subtitle || 'Identified'} • ${item.confidence} confidence</p>
+            <p class="text-[10px] text-slate-400 mt-1">${item.created_at}</p>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    container.innerHTML = `<p class="text-xs text-rose-500">Failed to load scan history.</p>`;
+  }
+}
+
+async function clearAllHistory() {
+  if (confirm("Are you sure you want to clear your scan history?")) {
+    await fetch('/api/history/', { method: 'DELETE' });
+    loadUserHistory();
+  }
+}
+
+/* Load User Settings (Settings page) */
+async function loadUserSettings() {
+  try {
+    const resp = await fetch('/api/settings/');
+    if (resp.status === 401) return; /* not signed in — leave fields as-is */
+    const data = await resp.json();
+    document.getElementById('setting-email').value = data.email || '';
+    document.getElementById('setting-autosave').checked = !!data.auto_save_history;
+  } catch (err) {
+    console.error("Failed to load settings:", err);
+  }
+}
+
+/* Save User Settings */
+async function saveUserSettings() {
+  const email = document.getElementById('setting-email').value;
+  const autoSave = document.getElementById('setting-autosave').checked;
+
+  try {
+    const resp = await fetch('/api/settings/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, auto_save_history: autoSave })
+    });
+    if (resp.status === 401) {
+      alert("Please sign in to save your preferences.");
+    } else if (resp.ok) {
+      alert("Preferences saved successfully!");
+    } else {
+      const data = await resp.json().catch(() => ({}));
+      alert(data.error || "Failed to save preferences.");
+    }
+  } catch (err) {
+    alert("Failed to save preferences. Please verify the server is running.");
+  }
+}
+
+/* Toggle Sidebar */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const brandText = document.getElementById('brand-text');
+  const sidebarAuth = document.getElementById('sidebar-auth');
+  const authHeader = document.getElementById('auth-header-widget');
+  const chevronLeft = document.getElementById('chevron-left');
+  const chevronRight = document.getElementById('chevron-right');
+  const labels = document.querySelectorAll('.nav-label');
+
+  isCollapsed = !isCollapsed;
+
+  if (isCollapsed) {
+    sidebar.classList.remove('w-64', 'p-5');
+    sidebar.classList.add('w-20', 'p-3');
+    brandText.classList.add('hidden');
+    sidebarAuth.classList.add('hidden');
+    if (authHeader) authHeader.classList.add('hidden');
+    chevronLeft.classList.add('hidden');
+    chevronRight.classList.remove('hidden');
+    labels.forEach(el => el.classList.add('hidden'));
+  } else {
+    sidebar.classList.remove('w-20', 'p-3');
+    sidebar.classList.add('w-64', 'p-5');
+    brandText.classList.remove('hidden');
+    sidebarAuth.classList.remove('hidden');
+    if (authHeader) authHeader.classList.remove('hidden');
+    chevronLeft.classList.remove('hidden');
+    chevronRight.classList.add('hidden');
+    labels.forEach(el => el.classList.remove('hidden'));
+  }
+}
+
+/* File Selection */
+function handleFileSelected(file) {
+  if (!file) return;
+  currentFile = file;
+
+  const dropzone = document.getElementById('dropzone');
+  const previewContainer = document.getElementById('preview-container');
+  const previewImg = document.getElementById('preview-img');
+  const fileName = document.getElementById('file-name');
+  const fileSize = document.getElementById('file-size');
+  const identifyBtn = document.getElementById('identify-btn');
+  const errorAlert = document.getElementById('error-alert');
+
+  previewImg.src = URL.createObjectURL(file);
+  fileName.innerText = file.name;
+  fileSize.innerText = (file.size / 1024).toFixed(0) + " KB";
+
+  dropzone.classList.add('hidden');
+  previewContainer.classList.remove('hidden');
+  errorAlert.classList.add('hidden');
+
+  identifyBtn.disabled = false;
+  identifyBtn.className = "w-full py-4 rounded-2xl text-white font-bold text-base shadow-lg transition-all flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 shadow-indigo-500/25 active:scale-[0.99]";
+}
+
+function clearSelection() {
+  currentFile = null;
+  document.getElementById('file-input').value = "";
+
+  document.getElementById('dropzone').classList.remove('hidden');
+  document.getElementById('preview-container').classList.add('hidden');
+  document.getElementById('error-alert').classList.add('hidden');
+
+  const identifyBtn = document.getElementById('identify-btn');
+  identifyBtn.disabled = true;
+  identifyBtn.className = "w-full py-4 rounded-2xl text-white font-bold text-base shadow-lg transition-all flex items-center justify-center gap-3 bg-slate-300 cursor-not-allowed shadow-none";
+  document.getElementById('btn-label').innerText = "Identify Image";
+
+  document.getElementById('results-card').classList.add('hidden');
+  document.getElementById('results-placeholder').classList.remove('hidden');
+}
+
+function getAttrIconEmoji(name) {
+  const map = {
+    paw: "🐾", tag: "🏷️", heart: "❤️", size: "📏",
+    weight: "⚖️", smile: "😊", briefcase: "💼", globe: "🌐", box: "📦"
+  };
+  return map[name] || "📌";
+}
+
+async function triggerIdentification() {
+  if (!currentFile) return;
+
+  const identifyBtn = document.getElementById('identify-btn');
+  const btnLabel = document.getElementById('btn-label');
+  const errorAlert = document.getElementById('error-alert');
+  const errorText = document.getElementById('error-text');
+
+  identifyBtn.disabled = true;
+  identifyBtn.classList.add('cursor-wait', 'opacity-80');
+  btnLabel.innerText = "Analyzing Image...";
+
+  const form = new FormData();
+  form.append('image', currentFile);
+
+  try {
+    const resp = await fetch('/api/predict/', { method: 'POST', body: form });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      errorText.innerText = data.error || 'Server error occurred during prediction.';
+      errorAlert.classList.remove('hidden');
+    } else {
+      document.getElementById('result-thumb').src = URL.createObjectURL(currentFile);
+      document.getElementById('result-title').innerText = data.class_name;
+      document.getElementById('result-subtitle').innerText = data.subtitle || `Category: ${data.class_name}`;
+      document.getElementById('result-tag').innerText = data.tag || 'Animal';
+      document.getElementById('result-description').innerText = data.description;
+
+      const attrGrid = document.getElementById('attributes-grid');
+      attrGrid.innerHTML = "";
+      if (data.attributes) {
+        data.attributes.forEach(attr => {
+          const item = document.createElement('div');
+          item.className = "bg-[#F8FAFF] border border-slate-200/60 rounded-xl p-3 flex items-start gap-3";
+          item.innerHTML = `
+            <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-700 shrink-0 text-base">
+              ${getAttrIconEmoji(attr.icon)}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${attr.label}</p>
+              <p class="text-xs font-bold text-slate-800 truncate mt-0.5">${attr.value}</p>
+            </div>
+          `;
+          attrGrid.appendChild(item);
+        });
+      }
+
+      const simGrid = document.getElementById('similar-grid');
+      simGrid.innerHTML = "";
+      if (data.similar_images) {
+        data.similar_images.forEach(img => {
+          const item = document.createElement('div');
+          item.className = "bg-slate-50 border border-slate-200/80 rounded-xl overflow-hidden hover:shadow-md transition-all group";
+          item.innerHTML = `
+            <img src="${img.url}" alt="${img.name}" class="w-full h-16 object-cover group-hover:scale-105 transition-transform" />
+            <p class="text-[10px] font-semibold text-slate-600 text-center py-1.5 px-1 truncate">${img.name}</p>
+          `;
+          simGrid.appendChild(item);
+        });
+      }
+
+      document.getElementById('results-placeholder').classList.add('hidden');
+      document.getElementById('results-card').classList.remove('hidden');
+
+      setTimeout(() => {
+        document.getElementById('results-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  } catch (err) {
+    errorText.innerText = 'Network error: Please verify that the Django server is running.';
+    errorAlert.classList.remove('hidden');
+  } finally {
+    identifyBtn.disabled = false;
+    identifyBtn.classList.remove('cursor-wait', 'opacity-80');
+    btnLabel.innerText = "Identify Image";
+  }
+}
+</script>
+</body>
+</html>
