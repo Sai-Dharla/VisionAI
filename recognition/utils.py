@@ -12,19 +12,24 @@ def _get_model():
     if _model is None:
         import tensorflow as tf
         from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2
+
+        # Keep TensorFlow's runtime pools small on memory-constrained services.
+        tf.config.threading.set_intra_op_parallelism_threads(1)
+        tf.config.threading.set_inter_op_parallelism_threads(1)
         print("Loading MobileNetV2 model... (first time only)")
         _model = MobileNetV2(weights='imagenet')
+        _model.trainable = False
         print("Model loaded successfully!")
     return _model
 
 def _preprocess_image(file_obj) -> np.ndarray:
     """Resize image to 224x224 and apply MobileNetV2 preprocessing."""
     from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-    img = Image.open(file_obj).convert('RGB')
-    img = img.resize((224, 224))
-    arr = np.array(img, dtype=np.float32)
-    arr = np.expand_dims(arr, axis=0)  # (1, 224, 224, 3)
-    return preprocess_input(arr)
+    with Image.open(file_obj) as source_image:
+        resized_image = source_image.convert('RGB').resize((224, 224))
+        arr = np.asarray(resized_image, dtype=np.float32)
+        batch = np.expand_dims(arr, axis=0)
+    return preprocess_input(batch)
 
 def get_wikipedia_info(query):
     """Fetch summary and basic info from Wikipedia API."""
@@ -159,8 +164,9 @@ def predict_image(file_obj):
         raise ValueError('Uploaded file is not a valid image.')
 
     model = _get_model()
-    preds = model.predict(x)
+    preds = model(x, training=False).numpy()
     decoded = decode_predictions(preds, top=1)[0]
+    del preds, x
     
     _, raw_name, confidence = decoded[0]
     class_name = raw_name.replace('_', ' ').title()
