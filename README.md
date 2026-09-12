@@ -1,7 +1,9 @@
 # VisionAI
 
 VisionAI is a Django image-recognition application powered by MobileNetV2. Upload an image to receive a predicted class, confidence score, structured details, and related image suggestions. Authenticated users can keep recognition history and manage account preferences.
+## Live Demo
 
+[View VisionAI Live](https://visionai-4.onrender.com)
 ## Features
 
 - MobileNetV2 image recognition for JPG, JPEG, PNG, and WEBP uploads
