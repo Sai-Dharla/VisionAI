@@ -30,7 +30,7 @@ From the project directory:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install django pillow numpy tensorflow
+pip install -r requirements.txt
 python manage.py migrate
 python manage.py check
 python manage.py runserver 127.0.0.1:8000
@@ -43,6 +43,19 @@ http://127.0.0.1:8000/
 ```
 
 Do not open `recognition/templates/recognition/index.html` directly and do not serve the templates with VS Code Live Server. Django must render the templates so `{% url %}` and authentication tags are processed correctly.
+
+## Deploying on Render
+
+The repository includes `render.yaml` with the complete web-service configuration. Create a new Render Blueprint from this repository. The blueprint provisions a PostgreSQL database, installs `requirements.txt`, collects static files, runs migrations, and starts Django with Gunicorn.
+
+The equivalent Render commands are:
+
+```text
+Build: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+Start: gunicorn image_recognition.wsgi:application
+```
+
+The blueprint generates `DJANGO_SECRET_KEY`, sets production `DJANGO_DEBUG=False`, allows the Render hostname, and supplies `DATABASE_URL` from the provisioned database. For a manually created service, add those same environment variables in Render before the first deploy.
 
 ## Main Routes
 
